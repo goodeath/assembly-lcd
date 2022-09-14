@@ -14,19 +14,19 @@
 .equ PERIPH, 0x20000000
 .global _start @ Provide program starting
 
-.macro SetOutputPin pinnumber
-    LDR R0, =0
-    LDR R1, =#pagelen
-    LDR R2, =#FLAG
-    LDR R3, #MAP_SHARED
-    LDR R5, =gpio_base_addr
-    LDR R7, =192
-    SVC 0
-    MOV R8, R0 @ Address
-    LDR R1, [R8] @ Address value 0-9 gpio pins
-    LDR R2, =pinnumber
+.macro SetOutputPin pin
+
+    LDR R2, =\pin
+    LDR R2, [R2]
+    LDR R1, [R8, R2] @ Address value 0-9 gpio pins
+
+    LDR R3, =\pin
+    LDR R3, [R3, #4] @ N*3 Shifts
+    MOV R2, R3 
+
     LDR R3, =3 
-    MUL R5, R2, R3
+    MUL R5, R2, R3 @ Pin offset * 3 bit multiply to reach point
+    @ binary operations to set mask
     LDR R2, =0xFFFFFFFF @ Mask
     LDR R3, =0b111
     LSL R3, R5
@@ -37,7 +37,6 @@
     LSL R3, R5
     ORR R1, R1, R3
     STR R1, [R8]
-
 .endm
 
 .macro TurnOnPin pinnumber
@@ -57,21 +56,30 @@
     STR R1, [R8, #0x28]
 .endm
 
-.macro TurnOffPin pinnumber
+.macro TurnOffPin pin
+    LDR R1, =\pin
+    LDR R2, [R1,#12]
+    LDR R1, [R8, R2] @ Address value 0-9 gpio pin out set
+
+    LDR R3, =0b1
+
+    LDR R5, =\pin
+    LDR R5, [R5, #4]
+    LSL R3, R5
+    ORR R1, R1, R3
+    STR R1, [R8, R2]
+.endm
+
+@ Access 0x20200 Address
+.macro map_memory
     LDR R0, =0
     LDR R1, =#pagelen
     LDR R2, =#FLAG
-    LDR R3, #MAP_SHARED
+    LDR R3, =#MAP_SHARED
     LDR R5, =gpio_base_addr
+    LDR R5, [R5]
     LDR R7, =192
     SVC 0
-    MOV R8, R0 @ Address
-    LDR R1, [R8, #0x1c] @ Address value 0-9 gpio pins
-    LDR R3, =0b1
-    LDR R5, =pinnumber
-    LSL R3, R5
-    ORR R1, R1, R3
-    STR R1, [R8, #0x1c]
 .endm
 
 _start:
@@ -79,48 +87,30 @@ _start:
     LDR R1, =2
     MOV R7, #sys_open
     SVC 0
-    MOV R3, R0;
-    movs r4, r0 @ fd for memmap
-    @ldr r5, =gpioaddr @ address we want / 4096
-    @ldr r5, [r5] @ load the address
-    @ldr r5, =gpio_base_addr
-    @mov r0, #0 @ let linux choose a
-    @mov r1, #pagelen @ size of mem we want
-    @LDR r2, =FLAG
-    @mov r3, #MAP_SHARED @ mem share options
-    @@mov r7, #192 @ mmap2 service num
-    @svc 0 @ call service
-    @mov r8, r0 @ keep the returned virt addr
-    @LDR r1, [r8]
-    LDR R0, =0
-    LDR R1, =#pagelen
-    LDR R2, =#FLAG
-    LDR R3, =#MAP_SHARED
-    LDR R5, =gpio_base_addr
-    LDR R7, =192
-    SVC 0
+    MOVS R4, R0 @ fd for memmap
+    
+    map_memory
     MOV R8, R0 @ Address
-    LDR R1, [R8] @ Address value 0-9 gpio pins
-    LDR R2, =6
-    LDR R3, =3 
-    MUL R5, R2, R3
-    LDR R2, =0xFFFFFFFF @ Mask
-    LDR R3, =0b111
-    LSL R3, R5
-    EOR R2, R2, R3
-    AND R1, R1, R2
-
-    LDR R3, =0b001  @ Set as output
+    SetOutputPin pin6
+    
+    @ RESET PIN
+    /*LDR R1, =pin6
+    LDR R1, [R1]
+    LDR R1, [R8, #0x1c] @ Address value 0-9 gpio pin out set
+    LDR R3, =0b1
+    LDR R5, =6
     LSL R3, R5
     ORR R1, R1, R3
-    STR R1, [R8]
+    STR R1, [R8, #0x1c]*/
+    TurnOffPin pin6
 
-    @ RESET PIN
+    @ SET PIN
     LDR R0, =0
     LDR R1, =#pagelen
     LDR R2, =#FLAG
     LDR R3, =#MAP_SHARED
     LDR R5, =gpio_base_addr
+    LDR R5, [R5]
     LDR R7, =192
     SVC 0
     MOV R8, R0 @ Address
@@ -131,24 +121,8 @@ _start:
     ORR R1, R1, R3
     STR R1, [R8, #0x1c]
 
-    @ SET PIN
-    LDR R0, =0
-    LDR R1, =#pagelen
-    LDR R2, =#FLAG
-    LDR R3, =#MAP_SHARED
-    LDR R5, =gpio_base_addr
-    LDR R7, =192
-    SVC 0
-    MOV R8, R0 @ Address
-    LDR R1, [R8, #0x28] @ Address value 0-9 gpio pin out set
-    LDR R3, =0b1
-    LDR R5, =6
-    LSL R3, R5
-    ORR R1, R1, R3
-    STR R1, [R8, #0x28]
-
     @ NANO
-    MOV R8, R4
+    MOV R9, R4
     ldr r0, =timespec
     ldr r1, =timespec
     ldr r2, =0
@@ -158,14 +132,16 @@ _start:
     ldr r6, =0
     mov r7, #162
     svc 0
-    MOV R4, R8
+    MOV R4, R9
 
+    TurnOffPin pin6
     @ RESET PIN
-    LDR R0, =0
+    /*LDR R0, =0
     LDR R1, =#pagelen
     LDR R2, =#FLAG
     LDR R3, =#MAP_SHARED
     LDR R5, =gpio_base_addr
+    LDR R5, [R5]
     LDR R7, =192
     SVC 0   
     MOV R8, R0 @ Address
@@ -174,7 +150,7 @@ _start:
     LDR R5, =6
     LSL R3, R5
     ORR R1, R1, R3
-    STR R1, [R8, #0x1c]
+    STR R1, [R8, #0x1c]*/
     @@@
     @CMP R0, #0 
     @mapMem
@@ -202,7 +178,10 @@ _end:
 .data
 @ Raspberry Pi Zero Base Address - 0x20200000 / 0x1000  = 0x20200 Page quantity  
 gpio_base_addr: .word 0x20200 
-pin6: .word
+pin6: .word 0  @ GPIO Select 0
+    .word 6 @ Needs 6 shifts
+    .word 0x1c @ GPIO Output Set 0
+    .word 0x28 @ GPIO Output Clear 0
 timespec: .word 5
 timespecnano: .word 100000000
 devmem: .asciz "/dev/mem"
