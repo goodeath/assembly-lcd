@@ -39,21 +39,19 @@
     STR R1, [R8]
 .endm
 
-.macro TurnOnPin pinnumber
-    LDR R0, =0
-    LDR R1, =#pagelen
-    LDR R2, =#FLAG
-    LDR R3, #MAP_SHARED
-    LDR R5, =gpio_base_addr
-    LDR R7, =192
-    SVC 0
-    MOV R8, R0 @ Address
-    LDR R1, [R8, #0x28] @ Address value 0-9 gpio pins
+.macro TurnOnPin pin
+    LDR R1, =\pin
+    LDR R2, [R1,#8]
+    LDR R1, [R8, R2] @ Address value 0-9 gpio pin out set
+
     LDR R3, =0b1
-    LDR R5, =pinnumber
+    
+    LDR R5, =\pin
+    LDR R5, [R5, #4]
+
     LSL R3, R5
     ORR R1, R1, R3
-    STR R1, [R8, #0x28]
+    STR R1, [R8, R2]
 .endm
 
 .macro TurnOffPin pin
@@ -70,6 +68,25 @@
     STR R1, [R8, R2]
 .endm
 
+.macro nanosleep seconds 
+    ldr r0, =\seconds
+    ldr r1, =\seconds
+    ldr r2, =0
+    ldr r3, =0
+    ldr r4, =0
+    ldr r5, =0
+    ldr r6, =0
+    mov r7, #162
+    svc 0
+.endm
+
+.macro open_file file
+    LDR R0, =\file
+    LDR R1, =2
+    MOV R7, #sys_open
+    SVC 0
+.endm
+
 @ Access 0x20200 Address
 .macro map_memory
     LDR R0, =0
@@ -83,10 +100,7 @@
 .endm
 
 _start:
-    LDR R0, =devmem
-    LDR R1, =2
-    MOV R7, #sys_open
-    SVC 0
+    open_file devmem
     MOVS R4, R0 @ fd for memmap
     
     map_memory
@@ -94,69 +108,16 @@ _start:
     SetOutputPin pin6
     
     @ RESET PIN
-    /*LDR R1, =pin6
-    LDR R1, [R1]
-    LDR R1, [R8, #0x1c] @ Address value 0-9 gpio pin out set
-    LDR R3, =0b1
-    LDR R5, =6
-    LSL R3, R5
-    ORR R1, R1, R3
-    STR R1, [R8, #0x1c]*/
     TurnOffPin pin6
-
     @ SET PIN
-    LDR R0, =0
-    LDR R1, =#pagelen
-    LDR R2, =#FLAG
-    LDR R3, =#MAP_SHARED
-    LDR R5, =gpio_base_addr
-    LDR R5, [R5]
-    LDR R7, =192
-    SVC 0
-    MOV R8, R0 @ Address
-    LDR R1, [R8, #0x1c] @ Address value 0-9 gpio pin out set
-    LDR R3, =0b1
-    LDR R5, =6
-    LSL R3, R5
-    ORR R1, R1, R3
-    STR R1, [R8, #0x1c]
+    TurnOnPin pin6
 
     @ NANO
     MOV R9, R4
-    ldr r0, =timespec
-    ldr r1, =timespec
-    ldr r2, =0
-    ldr r3, =0
-    ldr r4, =0
-    ldr r5, =0
-    ldr r6, =0
-    mov r7, #162
-    svc 0
+    nanosleep timespec
     MOV R4, R9
-
     TurnOffPin pin6
-    @ RESET PIN
-    /*LDR R0, =0
-    LDR R1, =#pagelen
-    LDR R2, =#FLAG
-    LDR R3, =#MAP_SHARED
-    LDR R5, =gpio_base_addr
-    LDR R5, [R5]
-    LDR R7, =192
-    SVC 0   
-    MOV R8, R0 @ Address
-    LDR R1, [R8, #0x1c] @ Address value 0-9 gpio pin out set
-    LDR R3, =0b1
-    LDR R5, =6
-    LSL R3, R5
-    ORR R1, R1, R3
-    STR R1, [R8, #0x1c]*/
-    @@@
-    @CMP R0, #0 
-    @mapMem
-    @nanoSleep
-    @GPIODirectionOut pin6
-    @GPIOTurnOn pin6 #0
+ 
     BPL _turnon
     MOV R0, #1 @ stdout
     LDR R1, =memMapErr
