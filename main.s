@@ -36,36 +36,58 @@
     LDR R3, =0b001  @ Set as output
     LSL R3, R5
     ORR R1, R1, R3
-    STR R1, [R8]
+    LDR R2, =\pin
+    LDR R2, [R2]
+    STR R1, [R8, R2]
+.endm
+
+.macro SetInputPin pin
+
+    LDR R2, =\pin
+    LDR R2, [R2]
+    LDR R1, [R8, R2] @ Address value 0-9 gpio pins
+
+    LDR R3, =\pin
+    LDR R3, [R3, #4] @ N*3 Shifts
+    MOV R2, R3 
+
+    LDR R3, =3 
+    MUL R5, R2, R3 @ Pin offset * 3 bit multiply to reach point
+    @ binary operations to set mask
+    LDR R2, =0xFFFFFFFF @ Mask
+    LDR R3, =0b111
+    LSL R3, R5
+    EOR R2, R2, R3
+    AND R1, R1, R2
+
+    LDR R3, =0b000  @ Set as output
+    LSL R3, R5
+    ORR R1, R1, R3
+    LDR R2, =\pin
+    LDR R2, [R2]
+    STR R1, [R8, R2]
 .endm
 
 .macro TurnOnPin pin
     LDR R1, =\pin
     LDR R2, [R1,#8]
-    LDR R1, [R8, R2] @ Address value 0-9 gpio pin out set
 
     LDR R3, =0b1
-    
-    LDR R5, =\pin
-    LDR R5, [R5, #4]
-
-    LSL R3, R5
-    ORR R1, R1, R3
-    STR R1, [R8, R2]
+    LDR R4, [R1, #16]
+    LSL R3, R4
+    STR R3, [R8, R2]
 .endm
 
 .macro TurnOffPin pin
     LDR R1, =\pin
     LDR R2, [R1,#12]
-    LDR R1, [R8, R2] @ Address value 0-9 gpio pin out set
 
     LDR R3, =0b1
 
     LDR R5, =\pin
-    LDR R5, [R5, #4]
+    LDR R5, [R5, #16]
     LSL R3, R5
-    ORR R1, R1, R3
-    STR R1, [R8, R2]
+    STR R3, [R8, R2]
 .endm
 
 .macro nanosleep seconds 
@@ -105,30 +127,15 @@ _start:
     
     map_memory
     MOV R8, R0 @ Address
-    SetOutputPin pin6
+ 
+    SetOutputPin pin16
     
     @ RESET PIN
-    TurnOffPin pin6
-    @ SET PIN
-    TurnOnPin pin6
-
-    @ NANO
-    MOV R9, R4
-    nanosleep timespec
-    MOV R4, R9
-    TurnOffPin pin6
+  
+    TurnOnPin pin16
  
-    BPL _turnon
-    MOV R0, #1 @ stdout
-    LDR R1, =memMapErr
-    LDR R2, =memMapsz @ Error msg
-    LDR R2, [R2]
-    LDR R7, =sys_write
-    SVC 0
     B _end
-_turnon:
-
-    B _end
+ 
 
 _end:
     mov R0, #0 @ Use 0 return code
@@ -138,11 +145,60 @@ _end:
 
 .data
 @ Raspberry Pi Zero Base Address - 0x20200000 / 0x1000  = 0x20200 Page quantity  
-gpio_base_addr: .word 0x20200 
-pin6: .word 0  @ GPIO Select 0
-    .word 6 @ Needs 6 shifts
-    .word 0x1c @ GPIO Output Set 0
-    .word 0x28 @ GPIO Output Clear 0
+gpio_base_addr: .word 0x3f200
+
+@@@ Pin Definitions @@@
+
+@ Pin Pattern:  
+@ Array offset              Description
+@   0x0         GPIO Select offset 
+@   0x4         3-Shift quantity to set ON/OFF used inside GPIO Output SET/CLEAR
+@   0x8         GPIO Output Set
+@   0xc         GPIO Output Clear
+
+@ E - Enable display
+pin1:   .word 0x0 
+        .word 1
+        .word 0x1c
+        .word 0x28
+        .word 0x1
+@ Only for test purpose
+pin6:   .word 0x0
+        .word 6 
+        .word 0x1c 
+        .word 0x28
+        .word 0x6
+@ D4    
+pin12:  .word 0x4 
+        .word 2
+        .word 0x1c
+        .word 0x28
+        .word 0xc
+@ D5
+pin16:  .word 0x4 
+        .word 6
+        .word 0x1c
+        .word 0x28
+        .word 0x10
+@ D6
+pin20:  .word 0x8 
+        .word 0
+        .word 0x1c
+        .word 0x28
+        .word 0x14
+@ D7
+pin21:  .word 0x8 
+        .word 1
+        .word 0x1c
+        .word 0x28
+        .word 0x15
+@ RS
+pin25:  .word 0x8 
+        .word 5
+        .word 0x1c
+        .word 0x28
+        .word 0x19
+
 timespec: .word 5
 timespecnano: .word 100000000
 devmem: .asciz "/dev/mem"

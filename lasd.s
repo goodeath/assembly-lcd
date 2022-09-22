@@ -114,10 +114,12 @@
 .endm
 
 .macro pulse 
-    TurnOn E
-    nanosleep timespec0 timespec5 // 5 ms
     TurnOff E
-     nanosleep timespec0 timespec5    // 5ms // 5ms   // 5ms // 5ms
+    nanosleep timespecnano00 timespecnano_1 // 1 us
+    TurnOn E
+    nanosleep timespecnano0 timespecnano45 // 5 ms
+    TurnOff E
+    nanosleep timespecnano0 timespecnano45 // 5ms
 .endm
  
 
@@ -149,24 +151,26 @@ _start:
     .ltorg
     SetOutputPin RS
     .ltorg
-
    
-    reset
+
     @ Start   
     // Step 1
-    @nanosleep timesz timenz
-    
-   
+    nanosleep timesz timenz
+
     // Step 2
     TurnOn DB4
     TurnOn DB5
     pulse
-    
+    reset
+    pulse
+    nanosleep times timen
     .ltorg
     
     // Step 3
     TurnOn DB4
     TurnOn DB5
+    pulse
+    reset
     pulse
     .ltorg
 
@@ -174,69 +178,59 @@ _start:
     TurnOn DB4
     TurnOn DB5
     pulse
+    reset
+    pulse
     .ltorg
     
     // Step 5
-    reset
+    TurnOn DB4
     TurnOn DB5
+    pulse
+    reset
     pulse
 
     // Step 6
     reset
-    TurnOn DB5
     pulse
     .ltorg
-    reset
     TurnOn DB7
     pulse
     .ltorg
-    // Works beefore here
-
 
     // Step 7
     reset
     pulse
-   
-    TurnOn DB7
-    pulse
-   
-    nanosleep t1s timespecnano0 // 5ms
-    nanosleep t1s timespecnano0 // 5ms
-
-    // Step  8
-    reset
-    pulse
     TurnOn DB4
     pulse
-    nanosleep ts0 tms10  // 5ms
+    nanosleep times timen
 
-    // Step 9
+    // Step8
+
     reset
     pulse
-    TurnOn DB6
-    TurnOn DB5
-    pulse
-    nanosleep ts0 tms10  // 5ms
-
-    // Step 11
-    reset
-    pulse
-    TurnOn DB4
     TurnOn DB5
     TurnOn DB6
-    TurnOn DB7
     pulse
-    
+
+    // step 9
+   // finished
+
+   //step10
     reset
-    TurnOn RS
+    pulse
+    TurnOn DB7
     TurnOn DB6
     pulse
-    reset
-    TurnOn RS
-    TurnOn DB4
-    pulse
-    reset
     /* 
+    //step 11
+    reset
+    pulse
+    TurnOn DB4
+    TurnOn DB5
+    TurnOn DB6
+    TurnOn DB7
+    pulse
+
     reset
     TurnOn DB4
     TurnOn DB5
@@ -266,10 +260,8 @@ _end:
 
 
 .data
-ts0: .word 0
-tms10: .word 10000000
 times: .word 0
-timen: .word 500000
+timen: .word 5000000
 timesz: .word 0
 timenz: .word 100000000
 t10: .word 0
@@ -298,19 +290,19 @@ pin6:   .word 0x0
         .word 0x1c 
         .word 0x28
         .word 0x6
-@ D4    pin 12
+@ D4    
 DB4:  .word 0x4 
         .word 2
         .word 0x1c
         .word 0x28
         .word 0xc
-@ D5 pin 16
+@ D5
 DB5:  .word 0x4 
         .word 6
         .word 0x1c
         .word 0x28
         .word 0x10
-@ D6 pin 20
+@ D6
 DB6:  .word 0x8 
         .word 0
         .word 0x1c
@@ -329,8 +321,6 @@ RS:  .word 0x8
         .word 0x28
         .word 0x19
 
-
-t1s: .word 1
 s100: .word 500000000
 ms100: .word 100000000
 us100: .word 60000

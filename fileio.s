@@ -1,6 +1,6 @@
-.equ O_RDONLY, 0
-.equ O_WRONLY, 1
-.equ O_CREAT, 0100
+@.equ O_RDONLY, 0
+@.equ O_WRONLY, 1
+@.equ O_CREAT, 0100
 
 @.equ sys_read, 3
 @.equ sys_write, 4
@@ -51,5 +51,3 @@
 .endm
 
 .data
-S_RDWR: .word 0666
-openMode: .word O_FLAGS
