@@ -42,6 +42,7 @@
 .endm
 
 .macro TurnOn pin
+    PUSH {R1-R4}
     LDR R1, =\pin
     LDR R2, [R1,#8]
 
@@ -49,9 +50,11 @@
     LDR R4, [R1, #16]
     LSL R3, R4
     STR R3, [R8, R2]
+    POP {R1-R4}
 .endm
 
 .macro TurnOff pin
+    PUSH {R1-R5}
     LDR R1, =\pin
     LDR R2, [R1,#12]
 
@@ -61,18 +64,16 @@
     LDR R5, [R5, #16]
     LSL R3, R5
     STR R3, [R8, R2]
+    POP {R1-R5}
 .endm
 
 .macro nanosleep seconds nano
+    PUSH {R0-R1}
     ldr r0, =\seconds
     ldr r1, =\nano
-    ldr r2, =0
-    ldr r3, =0
-    ldr r4, =0
-    ldr r5, =0
-    ldr r6, =0
     mov r7, #162
     svc 0
+    POP {R0-R1}
 .endm
 
 .macro open_file file
@@ -119,9 +120,160 @@
     TurnOff E
      nanosleep timespec0 timespec5    // 5ms // 5ms   // 5ms // 5ms
 .endm
+
+.macro display_clear
+    TurnOff RS
+    reset
+    pulse
+    TurnOn DB4
+    pulse
+.endm
+
+.macro SetInputPin pin
+
+    LDR R2, =\pin
+    LDR R2, [R2]
+    LDR R1, [R8, R2] @ Address value 0-9 gpio pins
+
+    LDR R3, =\pin
+    LDR R3, [R3, #4] @ N*3 Shifts
+    MOV R2, R3 
+
+    LDR R3, =3 
+    MUL R5, R2, R3 @ Pin offset * 3 bit multiply to reach point
+    @ binary operations to set mask
+    LDR R2, =0xFFFFFFFF @ Mask
+    LDR R3, =0b111
+    LSL R3, R5
+    EOR R2, R2, R3
+    AND R1, R1, R2
+
+    @LDR R3, =0b000  @ Set as output
+    @LSL R3, R5
+    @ORR R1, R1, R3
+    LDR R2, =\pin
+    LDR R2, [R2]
+    STR R1, [R8, R2]
+.endm
  
 
- 
+.macro ReadPin pin
+    PUSH {R1-R4}
+    LDR R1, =\pin
+    LDR R2, [R1, #0x14]
+    LDR R2, [R8, R2] @ Address value 0-9 gpio pins
+    LDR R4, [R1,#0x10] // Shift n times
+    LSR R2, R4
+    LDR R3, =0b1
+    AND R0, R3, R2
+    pop {R1-R4}
+.endm
+
+
+write_number:
+    PUSH {R1}
+    reset
+    TurnOn RS
+    TurnOn DB5
+    TurnOn DB4
+    pulse
+    .ltorg
+    CMP R1, #0
+    BEQ 1f
+    CMP R1, #1
+    BEQ 2f
+    CMP R1, #2
+    BEQ 3f
+    CMP R1, #3
+    BEQ 4f
+    CMP R1, #4
+    BEQ 5f
+    CMP R1, #5
+    BEQ 6f
+    CMP R1, #6
+    BEQ 7f
+    CMP R1, #7
+    BEQ 8f
+    CMP R1, #8
+    BEQ 9f
+    CMP R1, #9
+    BEQ 10f
+1:
+    reset
+    .ltorg
+    TurnOn RS
+    pulse
+    POP {R1}
+    BX LR
+2:
+    reset
+    TurnOn RS
+    TurnOn DB4
+    pulse
+    POP {R1}
+    BX LR
+3:
+    reset
+    TurnOn RS
+    TurnOn DB5
+    pulse
+    POP {R1}
+    BX LR
+4:
+    reset
+    TurnOn RS
+    TurnOn DB4
+    TurnOn DB5
+    pulse
+    POP {R1}
+    BX LR
+5:
+    reset
+    TurnOn RS
+    TurnOn DB6
+    pulse
+    POP {R1}
+    BX LR
+6:
+    reset
+    TurnOn RS
+    TurnOn DB6
+    TurnOn DB4
+    pulse
+    POP {R1}
+    BX LR
+7:
+    reset
+    TurnOn RS
+    TurnOn DB6
+    TurnOn DB5
+    pulse
+    POP {R1}
+    BX LR
+8:
+    reset
+    TurnOn RS
+    TurnOn DB6
+    TurnOn DB5
+    TurnOn DB4
+    pulse
+    POP {R1}
+    BX LR
+9:
+    reset
+    TurnOn RS
+    TurnOn DB7
+    pulse
+    POP {R1}
+    BX LR
+10:
+    reset
+    TurnOn RS
+    TurnOn DB7
+    TurnOn DB4
+    pulse
+    POP {R1}
+    BX LR
 _start:
    
 
@@ -149,6 +301,9 @@ _start:
     .ltorg
     SetOutputPin RS
     .ltorg
+
+    SetInputPin pin5
+    SetInputPin pin19
 
    
     reset
@@ -195,17 +350,25 @@ _start:
 
     // Step 7
     reset
+    .ltorg
     pulse
+    .ltorg
    
     TurnOn DB7
+    .ltorg
     pulse
+    .ltorg
    
     nanosleep t1s timespecnano0 // 5ms
+    .ltorg
     nanosleep t1s timespecnano0 // 5ms
+    .ltorg
 
     // Step  8
     reset
+    .ltorg
     pulse
+    .ltorg
     TurnOn DB4
     pulse
     nanosleep ts0 tms10  // 5ms
@@ -227,37 +390,68 @@ _start:
     TurnOn DB7
     pulse
     
-    reset
-    TurnOn RS
-    TurnOn DB6
-    pulse
-    reset
-    TurnOn RS
-    TurnOn DB4
-    pulse
-    reset
-    /* 
-    reset
-    TurnOn DB4
-    TurnOn DB5
-    TurnOn RS
-    pulse
-    pulse
-    TurnOff RS
-    nanosleep times timespec1
 
-    reset
-    TurnOff RS
-    TurnOn DB4
-    TurnOn DB5
-    pulse
-    reset
-    pulse
-    TurnOff RS
-    nanosleep times timespec1/* */
-   
 
-    B _end
+    B system_init
+
+@ This shit will ruin if not put in stack
+@ R1 - Counter
+@ R2 - Flag - Need for debounce button
+@ R3 - Reset (0/1)
+@ R4 - Pause/Start (0/1)
+system_init:
+    LDR R1, =9
+    @ Read button in r4
+    ReadPin pin5
+    MOV R4, R0
+    CMP R4, #0
+    BEQ system_init
+    @ Read button in r4
+
+    @ Read reset in r3 
+    ReadPin pin19
+    MOV R3, R0
+    CMP R3, #1
+    BEQ system_init
+    @ Read reset in r3 
+
+    CMP R4, #0
+    BEQ system_init
+    BL write_number
+
+    B system_run
+
+system_reset:
+    LDR R1, =9
+    display_clear   
+    B system_init
+
+system_run:
+    
+
+    @ Read reset in r3 
+    ReadPin pin19
+    MOV R3, R0
+    CMP R3, #1
+    BEQ system_reset
+    @ Read reset in r3 
+    
+    @ Validate button stop/start
+    ReadPin pin5
+    MOV R4, R0
+    CMP R4, #0
+    BEQ system_run
+    @ Validate button stop/start
+
+    nanosleep t1s timespecnano00
+    SUB R1, #1
+    CMP R1, #0
+    BEQ _end
+    display_clear
+    BL write_number
+    
+    B system_run
+
 
 _end:
     mov R0, #0 @ Use 0 return code
@@ -293,6 +487,18 @@ E:   .word 0x0
         .word 0x28
         .word 0x1
 @ Only for test purpose
+pin5:   .word 0x0
+        .word 5
+        .word 0x1c
+        .word 0x28
+        .word 0x5
+        .word 0x34
+pin19:   .word 0x4
+        .word 9
+        .word 0x1c
+        .word 0x28
+        .word 0x13
+        .word 0x34  
 pin6:   .word 0x0
         .word 6 
         .word 0x1c 
