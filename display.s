@@ -68,12 +68,12 @@
 .endm
 
 .macro nanosleep seconds nano
-    PUSH {R0-R1}
+    PUSH {R0-R6}
     ldr r0, =\seconds
     ldr r1, =\nano
     mov r7, #162
     svc 0
-    POP {R0-R1}
+    POP {R0-R6}
 .endm
 
 .macro open_file file
@@ -166,20 +166,18 @@
     LSR R2, R4
     LDR R3, =0b1
     AND R0, R3, R2
-    pop {R1-R4}
+    POP {R1-R4}
 .endm
 
 
 write_number:
-    PUSH {R1}
     reset
     TurnOn RS
     TurnOn DB5
     TurnOn DB4
     pulse
-    .ltorg
-    CMP R1, #0
-    BEQ 1f
+    @CMP R1, #0
+    @BEQ 1f
     CMP R1, #1
     BEQ 2f
     CMP R1, #2
@@ -198,26 +196,25 @@ write_number:
     BEQ 9f
     CMP R1, #9
     BEQ 10f
+
+    B 1f
 1:
     reset
     .ltorg
     TurnOn RS
     pulse
-    POP {R1}
     BX LR
 2:
     reset
     TurnOn RS
     TurnOn DB4
     pulse
-    POP {R1}
     BX LR
 3:
     reset
     TurnOn RS
     TurnOn DB5
     pulse
-    POP {R1}
     BX LR
 4:
     reset
@@ -225,14 +222,12 @@ write_number:
     TurnOn DB4
     TurnOn DB5
     pulse
-    POP {R1}
     BX LR
 5:
     reset
     TurnOn RS
     TurnOn DB6
     pulse
-    POP {R1}
     BX LR
 6:
     reset
@@ -240,7 +235,6 @@ write_number:
     TurnOn DB6
     TurnOn DB4
     pulse
-    POP {R1}
     BX LR
 7:
     reset
@@ -248,7 +242,6 @@ write_number:
     TurnOn DB6
     TurnOn DB5
     pulse
-    POP {R1}
     BX LR
 8:
     reset
@@ -257,14 +250,12 @@ write_number:
     TurnOn DB5
     TurnOn DB4
     pulse
-    POP {R1}
     BX LR
 9:
     reset
     TurnOn RS
     TurnOn DB7
     pulse
-    POP {R1}
     BX LR
 10:
     reset
@@ -272,7 +263,6 @@ write_number:
     TurnOn DB7
     TurnOn DB4
     pulse
-    POP {R1}
     BX LR
 _start:
    
@@ -391,57 +381,92 @@ _start:
     pulse
     
 
-
+    LDR R2, =1
     B system_init
 
 @ This shit will ruin if not put in stack
 @ R1 - Counter
 @ R2 - Flag - Need for debounce button
-@ R3 - Reset (0/1)
-@ R4 - Pause/Start (0/1)
-system_init:
-    LDR R1, =9
-    @ Read button in r4
-    ReadPin pin5
-    MOV R4, R0
-    CMP R4, #0
-    BEQ system_init
-    @ Read button in r4
+@ R5 - Reset (0/1)
+@ R6 - Pause/Start (0/1)
 
-    @ Read reset in r3 
+@ 0 - Active State
+@ 1 - Inactive State
+@ Reset Counter
+@ Logic to reset counter
+@ R2 - Last read value from R4
+@ R4 - Last value read from reset button
+@ R5 - Current reset state
+
+reset_counter:
+    LDR R5, =0x0 @ Reset should be executed only once. 
+    @ Use R1 for Pause/Start Debounce, reading R4 before value
+    MOV R2, R4
+    @ Read pause button value
     ReadPin pin19
-    MOV R3, R0
-    CMP R3, #1
-    BEQ system_init
-    @ Read reset in r3 
+    MOV R4, R0
+    CMP R4, R2
+    BNE 1f
+    BX LR
+1:
+    CMP R4, #1
+    BXEQ LR
+    LDR R5, =0x1
+    BX LR
 
-    CMP R4, #0
-    BEQ system_init
+
+@ Pause Counter 
+@ Logic to make the button toggle. Press one time, it goes from 0 to 1 and vice versa
+@ R2 - Last read value from R3 
+@ R3 - Last value read from pause button
+@ R6 - Current pause/start state 
+pause_counter:
+    @ Use R1 for Pause/Start Debounce, reading R4 before value
+    MOV R2, R3
+    @ Read pause button value
+    ReadPin pin5
+    MOV R3, R0
+    CMP R3, R2
+    BNE 1f
+    BX LR
+1:
+    CMP R3, #1
+    BXEQ LR
+    
+    CMP R6,#1
+    LDREQ R6, =0
+    LDRNE R6, =1
+    BX LR
+
+system_init:
+    @ Initial value
+    LDR R1, =9
+    display_clear
     BL write_number
+    B 1f
+1:
+    @ Checks if counter needs to be paused
+    BL pause_counter
+    CMP R6, #1
+    BEQ 1b
+    @ Check if counter needs to be reseted
+    BL reset_counter
+    CMP R5, #1
+    BEQ system_init    
 
     B system_run
-
-system_reset:
-    LDR R1, =9
-    display_clear   
-    B system_init
 
 system_run:
     
 
-    @ Read reset in r3 
-    ReadPin pin19
-    MOV R3, R0
-    CMP R3, #1
-    BEQ system_reset
-    @ Read reset in r3 
-    
-    @ Validate button stop/start
-    ReadPin pin5
-    MOV R4, R0
-    CMP R4, #0
+    @ Checks if counter needs to be paused
+    BL pause_counter
+    CMP R6, #1
     BEQ system_run
-    @ Validate button stop/start
+    @ Check if counter needs to be reseted
+    BL reset_counter
+    CMP R5, #1
+    BEQ system_init
 
     nanosleep t1s timespecnano00
     SUB R1, #1
@@ -454,6 +479,8 @@ system_run:
 
 
 _end:
+    display_clear
+    BL write_number
     mov R0, #0 @ Use 0 return code
     mov R7, #1 @ Command code 1 terms
     svc 0 @ Linux command to terminate
@@ -470,6 +497,7 @@ t10: .word 0
 @ Raspberry Pi Zero Base Address - 0x20200000 / 0x1000  = 0x20200 Page quantity  
 tns10: .word 900000000
 gpio_base_addr: .word 0x3F200 
+@gpio_base_addr: .word 0x20200 
 
 @@@ Pin Definitions @@@
 
