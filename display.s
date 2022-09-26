@@ -169,6 +169,44 @@
     POP {R1-R4}
 .endm
 
+@ Divide two numbers 
+@ R0 Dividend
+@ R1 Divisor
+@ R2 Quocient
+@ Return:
+@ R0 is quocient
+divide:
+    PUSH {R1-R2}
+    LDR R2, =0
+    CMP R0, R1
+    LDRLT R0, =0
+    BLT 2f
+    B 1f
+1:
+    SUB R0, R1
+    ADD R2, #1
+    CMP R0, R1
+    BGE 1b
+    MOV R0, R2
+    B 2f
+2:
+    POP {R1-R2}
+    BX LR
+
+remainder:
+    PUSH {R1}
+    CMP R0, R1
+    @MOVLT R0, R1
+    BLE 2f
+    B 1f
+1:
+    SUB R0, R1
+    CMP R0, R1
+    BGT 1b
+    B 2f
+2:
+    POP {R1}
+    BX LR
 
 write_number:
     reset
@@ -397,7 +435,6 @@ _start:
 @ R2 - Last read value from R4
 @ R4 - Last value read from reset button
 @ R5 - Current reset state
-
 reset_counter:
     LDR R5, =0x0 @ Reset should be executed only once. 
     @ Use R1 for Pause/Start Debounce, reading R4 before value
@@ -440,9 +477,29 @@ pause_counter:
 
 system_init:
     @ Initial value
-    LDR R1, =9
+    LDR R1, =14
+   
     display_clear
+    @BL write_number
+    PUSH { R1  }
+    MOV R0, R1
+    LDR R1, =0xA
+    BL divide
+    MOV R1, R0
     BL write_number
+    POP {R1}
+
+    PUSH { R1  }
+    MOV R0, R1
+    LDR R1, =0xA
+    BL remainder
+    MOV R1, R0
+    BL write_number
+    POP {R1}
+  
+
+ 
+
     B 1f
 1:
     @ Checks if counter needs to be paused
@@ -470,20 +527,37 @@ system_run:
 
     nanosleep t1s timespecnano00
     SUB R1, #1
-    CMP R1, #0
+    CMP R1, #-1
     BEQ _end
     display_clear
+    @BL write_number
+    PUSH { R1  }
+    MOV R0, R1
+    LDR R1, =0xA
+    BL divide
+    MOV R1, R0
     BL write_number
+    POP {R1}
+
+    PUSH { R1  }
+    MOV R0, R1
+    LDR R1, =0xA
+    BL remainder
+    MOV R1, R0
+    BL write_number
+    POP {R1}
+    
     
     B system_run
 
 
 _end:
-    display_clear
-    BL write_number
+    @display_clear
+    @BL write_number
     mov R0, #0 @ Use 0 return code
     mov R7, #1 @ Command code 1 terms
     svc 0 @ Linux command to terminate
+
 
 
 .data
