@@ -105,7 +105,7 @@ gpio_base_addr: .word 0x20200
 A interface da biblioteca gerada...
 # Resultados
 
-![contagem ocorrendo](https://s5.gifyu.com/images/document_5015051290825196196.gif)
+![contagem ocorrendo](https://s5.gifyu.com/images/Untitled-_1_.md.gif)
 
 O protótipo construído é um contador de 2 digitos, onde é possível configurar seu valor diretamente no código, possibilitando diferentes tempos. Ainda, é possível utilizar dois botões de controle. Um botão para pausar/iniciar a contagem, onde sua função alterna a cada pressionamento. E um botão para reiniciar a contagem, onde é acionado apenas uma vez após o pressionamento, necessitando assim soltar o botão antes de realizar um novo reinício.
 
