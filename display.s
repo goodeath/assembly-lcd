@@ -7,13 +7,11 @@
 .equ sys_write, 4
 .equ sys_open, 5
 .equ sys_close, 6
-.equ sys_fsync, 118
 .equ FLAG, 0x7
 .equ pagelen, 4096
-.equ GPIO_OFFSET, 0x200000
-.equ PERIPH, 0x20000000
 .global _start @ Provide program starting
 
+@ SetOutputPin
 .macro SetOutputPin pin
 
     LDR R2, =\pin
@@ -96,23 +94,6 @@
     SVC 0
 .endm
 
-.macro reset
-    TurnOff E
-    TurnOff DB4
-    TurnOff DB5
-    TurnOff DB6
-    TurnOff DB7
-    TurnOff RS
-.endm
-
-.macro set
-    TurnOn E
-    TurnOn DB4
-    TurnOn DB5
-    TurnOn DB6
-    TurnOn DB7
-    TurnOn RS
-.endm
 
 .macro pulse 
     TurnOn E
@@ -123,10 +104,8 @@
 
 .macro display_clear
     TurnOff RS
-    reset
-    pulse
-    TurnOn DB4
-    pulse
+    write_4bit #0x0
+    write_4bit #0x1
 .endm
 
 .macro SetInputPin pin
@@ -169,6 +148,83 @@
     POP {R1-R4}
 .endm
 
+TurnOnp:
+    PUSH {R1-R4}
+    MOV R1, R0
+    LDR R2, [R1,#8]
+
+    LDR R3, =0b1
+    LDR R4, [R1, #16]
+    LSL R3, R4
+    STR R3, [R8, R2]
+    POP {R1-R4}
+    BX LR
+
+
+TurnOffp:
+    PUSH {R1-R5}
+    MOV R1, R0
+    LDR R2, [R1,#12]
+
+    LDR R3, =0b1
+
+    MOV R5, R0
+    LDR R5, [R5, #16]
+    LSL R3, R5
+    STR R3, [R8, R2]
+    POP {R1-R5}
+    BX LR
+
+
+@ Change pin value
+turn:
+    PUSH {LR}
+    CMP R1, #1
+    BLGE TurnOnp
+    BLLT TurnOffp
+    POP {LR}
+    BX LR
+
+
+
+write_data_4bits:
+    
+    PUSH {R1, R2, LR}
+    MOV R2, R0 @ Hex value to set D7-D4
+    LDR R1, =0x8 @ Check fourth bit
+    AND R1, R1, R2
+
+    LDR R0, =DB7
+    BL turn
+
+    LDR R1, =0x4 @ Check fourth bit
+    AND R1, R1, R2
+
+    LDR R0, =DB6
+    BL turn
+
+    LDR R1, =0x2 @ Check fourth bit
+    AND R1, R1, R2
+
+    LDR R0, =DB5
+    BL turn
+
+    LDR R1, =0x1 @ Check fourth bit
+    AND R1, R1, R2
+
+    LDR R0, =DB4
+    BL turn
+    POP {R1, R2, LR}
+   
+    BX LR
+
+.macro write_4bit value
+    PUSH {LR}
+    LDR R0, =\value
+    BL write_data_4bits
+    pulse
+    POP {LR}
+.endm
 @ Divide two numbers 
 @ R0 Dividend
 @ R1 Divisor
@@ -209,11 +265,9 @@ remainder:
     BX LR
 
 write_number:
-    reset
+    
     TurnOn RS
-    TurnOn DB5
-    TurnOn DB4
-    pulse
+    write_4bit 0x3
     @CMP R1, #0
     @BEQ 1f
     CMP R1, #1
@@ -237,70 +291,34 @@ write_number:
 
     B 1f
 1:
-    reset
-    .ltorg
-    TurnOn RS
-    pulse
+    write_4bit #0x0
     BX LR
 2:
-    reset
-    TurnOn RS
-    TurnOn DB4
-    pulse
+    write_4bit #0x1
     BX LR
 3:
-    reset
-    TurnOn RS
-    TurnOn DB5
-    pulse
+    write_4bit #0x2
     BX LR
 4:
-    reset
-    TurnOn RS
-    TurnOn DB4
-    TurnOn DB5
-    pulse
+    write_4bit #0x3
     BX LR
 5:
-    reset
-    TurnOn RS
-    TurnOn DB6
-    pulse
+    write_4bit 0x4
     BX LR
 6:
-    reset
-    TurnOn RS
-    TurnOn DB6
-    TurnOn DB4
-    pulse
+    write_4bit #0x5
     BX LR
 7:
-    reset
-    TurnOn RS
-    TurnOn DB6
-    TurnOn DB5
-    pulse
+    write_4bit #0x6
     BX LR
 8:
-    reset
-    TurnOn RS
-    TurnOn DB6
-    TurnOn DB5
-    TurnOn DB4
-    pulse
+    write_4bit #0x7
     BX LR
 9:
-    reset
-    TurnOn RS
-    TurnOn DB7
-    pulse
+    write_4bit #0x8
     BX LR
 10:
-    reset
-    TurnOn RS
-    TurnOn DB7
-    TurnOn DB4
-    pulse
+    write_4bit #0x9
     BX LR
 _start:
    
@@ -333,92 +351,45 @@ _start:
     SetInputPin pin5
     SetInputPin pin19
 
-   
-    reset
+    TurnOff RS
+    TurnOff E
+    
     @ Start   
     // Step 1
     @nanosleep timesz timenz
     
+    write_4bit #0x3
+    write_4bit #0x3
+    write_4bit #0x3
    
-    // Step 2
-    TurnOn DB4
-    TurnOn DB5
-    pulse
-    
-    .ltorg
-    
-    // Step 3
-    TurnOn DB4
-    TurnOn DB5
-    pulse
-    .ltorg
+    write_4bit #0x2
+    write_4bit #0x2
 
-    // Step 4
-    TurnOn DB4
-    TurnOn DB5
-    pulse
-    .ltorg
-    
-    // Step 5
-    reset
-    TurnOn DB5
-    pulse
+    write_4bit #0x8
 
-    // Step 6
-    reset
-    TurnOn DB5
-    pulse
-    .ltorg
-    reset
-    TurnOn DB7
-    pulse
-    .ltorg
-    // Works beefore here
+    write_4bit #0x0
+    write_4bit #0x8
 
-
-    // Step 7
-    reset
-    .ltorg
-    pulse
-    .ltorg
-   
-    TurnOn DB7
-    .ltorg
-    pulse
-    .ltorg
-   
     nanosleep t1s timespecnano0 // 5ms
     .ltorg
     nanosleep t1s timespecnano0 // 5ms
     .ltorg
 
-    // Step  8
-    reset
-    .ltorg
-    pulse
-    .ltorg
-    TurnOn DB4
-    pulse
+    write_4bit #0x0
+    write_4bit #0x1
+
     nanosleep ts0 tms10  // 5ms
 
-    // Step 9
-    reset
-    pulse
-    TurnOn DB6
-    TurnOn DB5
-    pulse
+    write_4bit #0x0
+    write_4bit #0x6
+
     nanosleep ts0 tms10  // 5ms
 
-    // Step 11
-    reset
-    pulse
-    TurnOn DB4
-    TurnOn DB5
-    TurnOn DB6
-    TurnOn DB7
-    pulse
+    write_4bit #0x0
+    write_4bit #0xF
     
-
+   
+    
     LDR R2, =1
     B system_init
 
@@ -477,7 +448,7 @@ pause_counter:
 
 system_init:
     @ Initial value
-    LDR R1, =14
+    LDR R1, =98
    
     display_clear
     @BL write_number
@@ -496,9 +467,6 @@ system_init:
     MOV R1, R0
     BL write_number
     POP {R1}
-  
-
- 
 
     B 1f
 1:
