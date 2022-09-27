@@ -30,10 +30,11 @@ Dentro de um espaço de 16 colunas e 2 linhas, baseado no controlador [HD44780](
 
 # Arquitetura
 
+## Instruções Arm V6
 
 
 # Sistema Operacional
-## Instruções Arm V6
+O sistema operacional utilizado é o Raspberry Pi OS, derivado do Debian. Desta maneira, possui as mesmas chamadas de sistema que o linux.
 ## System Calls
 
 Devido a presença de sistema operacional na Raspberry Pi Zero, para realizar um acesso aos dispositivos presentes na placa, é necessário realizar o mapeamento de memória, onde é exigido a chamada de algumas system calls para realizar esse acesso. Para outros dispositivos, como o acionamento do relógio interno, o sistema operacional oferece uma interface amigável.
@@ -102,16 +103,19 @@ gpio_base_addr: .word 0x20200
 
 # Interface 
 A interface da biblioteca gerada...
+# Resultados
 
-# Funcionamento do protótipo
+![contagem ocorrendo](https://s5.gifyu.com/images/document_5015051290825196196.gif)
+
 O protótipo construído é um contador de 2 digitos, onde é possível configurar seu valor diretamente no código, possibilitando diferentes tempos. Ainda, é possível utilizar dois botões de controle. Um botão para pausar/iniciar a contagem, onde sua função alterna a cada pressionamento. E um botão para reiniciar a contagem, onde é acionado apenas uma vez após o pressionamento, necessitando assim soltar o botão antes de realizar um novo reinício.
 
-# Limitações
+## Limitações
 
-## Quantidade de dígitos
+### Quantidade de dígitos
 Não é possível escrever um número maior que dois digitos. Foi implementado um algoritmo de divisão por subtrações sucessívas, para realizar a separação dos dígitos decimais a partir do valor binário. Para a separação de múltiplos dígitos, seria necessário realizar uma abstração maior. Uma maneira de alcançar esse resultado, é dividir por 10, pegar o resto que é nosso último dígito, e subtrair do número original. Em seguida, dividir por 100, pegar o resto que é o penúltimo digito, e subtrair do original. Seguindo esses passos até o número se tornar zero. Pode-se empilhar os valores de forma, que sejam exibidos na ordem correta.
 
-## Acionamento dos botões
+### Acionamento dos botões
 Os botões só são reconhecidos entre a contagem de dois números. Como foi utilizado um nanosleep de 1 segundo, enquanto há espera, os botões não reagem. Uma forma de solucionar este problema é realizar n = 1000/t  chamadas de t milissegundos, de forma que entre cada espera menor, os botões sejam checados
 
-# Resultados
+### Precisão
+O tempo de espera não é preciso. Pois, é feito utilizando uma chamada ao sistema operacional que, vai aguardar no mínimo o tempo solicitado, mas, devido a processos internos, pode não retornar ao processo no tempo exato, adicionando assim, alguns atrasos que dentro do projeto não causam impactos maiores,mas, em diversas outras situações pode ser significativo
