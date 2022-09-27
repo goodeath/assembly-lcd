@@ -1,8 +1,5 @@
 @.include "gpiomem.s"
-.equ PROT_READ, 0x1
-.equ PROT_WRITE, 0x2
 .equ MAP_SHARED, 0x01
-.equ PROT_RDWR, PROT_READ|PROT_WRITE
 .equ sys_read, 3
 .equ sys_write, 4
 .equ sys_open, 5
@@ -268,85 +265,32 @@ write_number:
     
     TurnOn RS
     write_4bit 0x3
-    @CMP R1, #0
-    @BEQ 1f
-    CMP R1, #1
-    BEQ 2f
-    CMP R1, #2
-    BEQ 3f
-    CMP R1, #3
-    BEQ 4f
-    CMP R1, #4
-    BEQ 5f
-    CMP R1, #5
-    BEQ 6f
-    CMP R1, #6
-    BEQ 7f
-    CMP R1, #7
-    BEQ 8f
-    CMP R1, #8
-    BEQ 9f
-    CMP R1, #9
-    BEQ 10f
-
-    B 1f
-1:
-    write_4bit #0x0
+    PUSH {LR}
+        CMP R1, #10
+        LDREQ R1, =0 @ BUG!! Inside remainder
+        MOV R0, R1
+        BL write_data_4bits
+        pulse
+    POP {LR}
     BX LR
-2:
-    write_4bit #0x1
-    BX LR
-3:
-    write_4bit #0x2
-    BX LR
-4:
-    write_4bit #0x3
-    BX LR
-5:
-    write_4bit 0x4
-    BX LR
-6:
-    write_4bit #0x5
-    BX LR
-7:
-    write_4bit #0x6
-    BX LR
-8:
-    write_4bit #0x7
-    BX LR
-9:
-    write_4bit #0x8
-    BX LR
-10:
-    write_4bit #0x9
-    BX LR
+    
 _start:
    
 
     open_file devmem
-    .ltorg
     MOVS R4, R0 @ fd for memmap
     map_memory
-    .ltorg
     MOV R8, R0 @ Address
 
     @ Set as out
     
-    .ltorg
     SetOutputPin E
-    .ltorg
     SetOutputPin pin6
-    .ltorg
     SetOutputPin DB4
-    .ltorg
     SetOutputPin DB5
-    .ltorg
     SetOutputPin DB6  
-    .ltorg
     SetOutputPin DB7
-    .ltorg
     SetOutputPin RS
-    .ltorg
 
     SetInputPin pin5
     SetInputPin pin19
@@ -361,17 +305,13 @@ _start:
     write_4bit #0x3
     write_4bit #0x3
     write_4bit #0x3
-   
     write_4bit #0x2
     write_4bit #0x2
-
     write_4bit #0x8
-
     write_4bit #0x0
     write_4bit #0x8
 
     nanosleep t1s timespecnano0 // 5ms
-    .ltorg
     nanosleep t1s timespecnano0 // 5ms
     .ltorg
 
@@ -387,8 +327,6 @@ _start:
 
     write_4bit #0x0
     write_4bit #0xF
-    
-   
     
     LDR R2, =1
     B system_init
@@ -448,7 +386,7 @@ pause_counter:
 
 system_init:
     @ Initial value
-    LDR R1, =98
+    LDR R1, =90
    
     display_clear
     @BL write_number
