@@ -168,7 +168,19 @@ gpio_base_addr: .word 0x20200
 
 
 # Interface 
-A interface da biblioteca gerada...
+API da biblioteca para manipulação do LCD
+##### void init();
+Inicializa o display para que possa ser escrito
+
+##### void clear_display();
+Faz com que o display inteiro seja limpo
+
+##### void write_char(char ch);
+Escreve caracteres alfa numéricos (0-9a-zA-Z)
+
+##### void move_cursor(int x, int y);
+Posiciona o cursor na linha x (0-1) e na coluna y (0-15)
+
 
 # Resultados
 
