@@ -184,9 +184,9 @@ Posiciona o cursor na linha x (0-1) e na coluna y (0-15)
 # Como executar
 1. Compile o código do display.s
 `$ as -o display.o display.s`
-Execute o linker
+2. Execute o linker
 `$ ld -o display display.o` 
-Execute o programa como administrador
+3. Execute o programa como administrador
 `$ sudo ./display`
 
 # Resultados
