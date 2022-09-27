@@ -421,15 +421,15 @@ system_init:
 
 system_run:
     
-
-    @ Checks if counter needs to be paused
-    BL pause_counter
-    CMP R6, #1
-    BEQ system_run
     @ Check if counter needs to be reseted
     BL reset_counter
     CMP R5, #1
     BEQ system_init
+    @ Checks if counter needs to be paused
+    BL pause_counter
+    CMP R6, #1
+    BEQ system_run
+    
 
     nanosleep t1s timespecnano00
     SUB R1, #1
