@@ -19,12 +19,24 @@ Baseada no processador [BCM 2385](https://datasheets.raspberrypi.com/bcm2835/bcm
 | 40 | 21 | D7 |
 | 22 | 25 | Sinal RS |
 ### Endereços de Memória
-Endereço base gpio 0x20200000
+
+| Endereço | Descrição |
+| - | - | 
+| 0x20200000 | Endereço base da GPIO / Modo de seleção I/O GPIO 0-9 |
+| 0x20200004 | Modo de seleção I/O GPIO 10-19 |
+| 0x20200008 | Modo de seleção I/O GPIO 20-29 |
+| 0x2020001c | Escrita HIGH GPIO 0-31 |
+| 0x20200028 | Escrita LOW GPIO 0-31 |
+| 0x20200034 | Leitura GPIO 0-31 |
+
+No caso da utilização do mmap2, o último parâmetro é o offset da memória em número de paginas. Se o tamanho da página for 0x1000, o endereço base acima vai ser: 0x20200.
 
 ## Display LCD 16x2
 Dentro de um espaço de 16 colunas e 2 linhas, baseado no controlador [HD44780](https://www.sparkfun.com/datasheets/LCD/HD44780.pdf), o display lcd permite a criação de uma interface amigável, possibilitando a exibição de vários tipos de informações. Este display possui dois modos de ação: 4 bits ou 8 bits. Atualmente, esta biblioteca usa apenas o modo de quatro bits.
 
 ### Rotina de Inicialização
+
+### Comandos
 
 # Wiring
 
@@ -87,6 +99,8 @@ Utilizada para mapear um endereço físico para memória virtual, retornando seu
 ```
 .EQU mmap2_sys, #192
 .EQU pagelen, 4096
+.equ MAP_SHARED, 0x01
+.equ FLAG, 0x7
 .global _start
     LDR R0, =0
     LDR R1, =#pagelen
@@ -103,6 +117,7 @@ gpio_base_addr: .word 0x20200
 
 # Interface 
 A interface da biblioteca gerada...
+
 # Resultados
 
 ![contagem ocorrendo](result.gif)
