@@ -14,9 +14,9 @@ Baseada no processador [BCM 2385](https://datasheets.raspberrypi.com/bcm2835/bcm
 | 29 | 5 | Push Button 1 |
 | 35 | 19 | Push Button 2 |
 | 32 | 12 | D4 |
-| 36 | 16 | D5 |
-| 38 | 20 | D6 |
-| 40 | 21 | D7 |
+| 36 | 16 | DB5 |
+| 38 | 20 | DB6 |
+| 40 | 21 | DB7 |
 | 22 | 25 | Sinal RS |
 ### Endereços de Memória
 
@@ -38,7 +38,7 @@ Dentro de um espaço de 16 colunas e 2 linhas, baseado no controlador [HD44780](
 
 Para realizar a inicialização completa do display, é preciso executar os seguintes passos:
 
-| E | D7 | D6 | D5 | D4 |
+| E | DB7 | DB6 | DB5 | D4 |
 | - | - | - | - | - |
 |  ⎍  | 0 | 0 | 1 | 1 |
 |  ⎍  | 0 | 0 | 1 | 1 |
@@ -62,14 +62,39 @@ As transições são reconhecidas nas bordas de descida.
 
 ### Comandos
 
-Clear Display
-Move Cursor
-Write data
+#### Clear Display
+| E | RS | RW | DB7 | DB6 | DB5 | D4 | DB3 | DB2 | DB1 | DB0 |
+| - | - | - | - | - | - | - | - | - | - | - |
+| ⎍ | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 1 |
 
-# Wiring
-ligação no frietzing
+#### Return Home
+| E | RS | RW | DB7 | DB6 | DB5 | D4 | DB3 | DB2 | DB1 | DB0 |
+| - | - | - | - | - | - | - | - | - | - | - |
+| ⎍ | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 1 | - |
+
+#### Cursor Shift
+
+| E | RS | RW | DB7 | DB6 | DB5 | D4 | DB3 | DB2 | DB1 | DB0 |
+| - | - | - | - | - | - | - | - | - | - | - |
+| ⎍ | 0 | 0 | 0 | 0 | 0 | 1 | S/C | R/L | - | - |
+
+S/C = 1 - Desloca Display
+S/C = 0 - Move Cursor
+R/L = 1 - Desloca a direita
+R/L = 0 - Desloca a esquerda
+
+
 # Arquitetura
-blabla sobre arm
+A arquitetura utilizada é a ArmV6 presente na Raspberry Pi Zero, pertencente a família de processadores RISC. A Raspberry Pi Zero utiliza o processador BCM 2835, que é um processador de 32 bits e seu programa pode ser executado em versões mais recentes, pois o ArmV7 e ArmV8 possui retrocompatibilidade com o ArmV6.
+
+Os registradores da arquitetura Arm é composta por:
+- 13 registradores (R0-R12) de uso geral;
+- 1 Stack Pointer (SP);
+- 1 Link Register (LR);
+- 1 Program Counter (PC);
+- 1 Application Program Status Register APSR
+
+Se tratando do sistema operacional, registradores podem ter usos específicos, cuidado! Por exemplo, no Raspberry Pi OS, a função de sistema é escolhida colocando seu identificador no R7, e seu retorno está presente no R0 após a chamada da função.
 
 
 # Sistema Operacional
