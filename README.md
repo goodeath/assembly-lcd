@@ -181,6 +181,13 @@ Escreve caracteres alfa numéricos (0-9a-zA-Z)
 ##### void move_cursor(int x, int y);
 Posiciona o cursor na linha x (0-1) e na coluna y (0-15)
 
+# Como executar
+1. Compile o código do display.s
+`$ as -o display.o display.s`
+Execute o linker
+`$ ld -o display display.o` 
+Execute o programa como administrador
+`$ sudo ./display`
 
 # Resultados
 
