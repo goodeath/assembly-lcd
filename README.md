@@ -36,13 +36,40 @@ Dentro de um espaço de 16 colunas e 2 linhas, baseado no controlador [HD44780](
 
 ### Rotina de Inicialização
 
+Para realizar a inicialização completa do display, é preciso executar os seguintes passos:
+
+| E | D7 | D6 | D5 | D4 |
+| - | - | - | - | - |
+|  ⎍  | 0 | 0 | 1 | 1 |
+|  ⎍  | 0 | 0 | 1 | 1 |
+|  ⎍  | 0 | 0 | 1 | 1 |
+|  ⎍  | 0 | 0 | 1 | 0 |
+|  ⎍  | 0 | 0 | 1 | 0 |
+|  ⎍  | 1 | 0 | 0 | 0 |
+|  ⎍  | 0 | 0 | 0 | 0 |
+|  ⎍  | 1 | 0 | 0 | 0 |
+|  ⎍  | wait | 5 | m | s |
+|  ⎍  | 0 | 0 | 0 | 0 |
+|  ⎍  | 0 | 0 | 0 | 1 |
+|  ⎍  | wait | 5 | m | s |
+|  ⎍  | 0 | 0 | 0 | 0 |
+|  ⎍  | 0 | 1 | 1 | 0 |
+|  ⎍  | wait | 5 | m | s |
+|  ⎍  | 0 | 0 | 0 | 0 |
+|  ⎍  | 1 | 1 | 1 | 1 |
+
+As transições são reconhecidas nas bordas de descida.
+
 ### Comandos
 
+Clear Display
+Move Cursor
+Write data
+
 # Wiring
-
+ligação no frietzing
 # Arquitetura
-
-## Instruções Arm V6
+blabla sobre arm
 
 
 # Sistema Operacional
