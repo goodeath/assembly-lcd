@@ -485,8 +485,10 @@ gpio_base_addr: .word 0x3F200
 @ Array offset              Description
 @   0x0         GPIO Select offset 
 @   0x4         3-Shift quantity to set ON/OFF used inside GPIO Output SET/CLEAR
-@   0x8         GPIO Output Set
-@   0xc         GPIO Output Clear
+@   0x8         GPIO Output Set offset
+@   0xc         GPIO Output Clear offset
+@   0x10        Shift quantity inside Set/Clear registers
+@   0x14        GPIO Read Level Offset
 
 @ E - Enable display
 E:   .word 0x0 
@@ -559,8 +561,7 @@ timespecnano_1: .word 1000
 mask: .word 0xFFFFFFFF
 mode: .word 2
 timespec1ms: .word 1000000
-@timespecnano: .word 5000000 @1000000     1
-@timespecnanomc: .word 3000 @1000000     1
+
 devmem: .asciz "/dev/mem"
 @memOpnErr: .asciz "Failed to open /dev/mem\n"
 @memOpnsz: .word .-memOpnErr
