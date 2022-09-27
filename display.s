@@ -6,7 +6,7 @@
 .equ sys_close, 6
 .equ FLAG, 0x7
 .equ pagelen, 4096
-.global _start @ Provide program starting
+.global main @ Provide program starting
 
 @ SetOutputPin
 .macro SetOutputPin pin
@@ -274,7 +274,7 @@ write_number:
     POP {LR}
     BX LR
     
-_start:
+main:
    
 
     open_file devmem

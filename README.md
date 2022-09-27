@@ -182,11 +182,12 @@ Escreve caracteres alfa numéricos (0-9a-zA-Z)
 Posiciona o cursor na linha x (0-1) e na coluna y (0-15)
 
 # Como executar
-1. Compile o código do display.s
-`$ as -o display.o display.s`
-2. Execute o linker
-`$ ld -o display display.o` 
-3. Execute o programa como administrador
+1. Na pasta execute:
+
+`$ make countdown`
+
+2. Em seguida execute o programa
+
 `$ sudo ./display`
 
 # Resultados
