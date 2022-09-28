@@ -1,7 +1,7 @@
 .include "lib/lcd.s"
 
 .global main @ Provide program starting
-
+.section .text
 @ Divide two numbers 
 @ R0 Dividend
 @ R1 Divisor
@@ -86,6 +86,8 @@ reset_counter:
 pause_counter:
     @ Use R1 for Pause/Start Debounce, reading R4 before value
     MOV R2, R3
+    nanosleep timespec0 timespec5 // 5 ms
+    
     @ Read pause button value
     ReadPin pin5
     MOV R3, R0
