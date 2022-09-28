@@ -1,21 +1,18 @@
 .include "lib/utils.s"
 .include "lib/fileio.s"
 .include "lib/gpio.s"
+.section .text
+@ Export lib
+.global init
+.global clear_display
+.global write_char
 
 .macro pulse 
     TurnOn E
     nanosleep timespec0 timespec5 // 5 ms
     TurnOff E
-     nanosleep timespec0 timespec5    // 5ms // 5ms   // 5ms // 5ms
+    nanosleep timespec0 timespec5    // 5ms // 5ms   // 5ms // 5ms
 .endm
-
-.macro display_clear
-    TurnOff RS
-    write_4bit #0x0
-    write_4bit #0x1
-.endm
-
-
 
 
 
@@ -69,8 +66,15 @@ write_data_4bits:
     POP {LR}
 .endm
 
-write_number:
-    
+write_4bit2:
+    PUSH {LR}
+    BL write_data_4bits
+    pulse
+    POP {LR}
+    BX LR
+
+
+write_number: 
     TurnOn RS
     write_4bit 0x3
     PUSH {LR}
@@ -81,9 +85,64 @@ write_number:
         pulse
     POP {LR}
     BX LR
+    
+
+
+
+.syntax unified
+write_char:
+    PUSH {R0-R2, LR}
+    TurnOn RS
+    CMP R0, #32
+    BEQ 1f
+    MOV R1, R0
+    LDR R0, =97
+    SUB R1, R1, R0
+
+    CMP R1, #0xE
+    LDRLE R0, =0x6
+    LDRGT R0, =0x7
+    BL write_4bit2
+
+    LDR R0, =0x1
+    ADD R0, R1
+    BL write_4bit2
+   
+    POP {R0-R2, LR}
+    BX LR
+1:
+    write_4bit 0x8
+    write_4bit 0x0
+    POP {R0-R2, PC}
+ 
+.macro display_clear
+    TurnOff RS
+    write_4bit #0x0
+    write_4bit #0x1
+.endm
+
+display_clear2:
+    PUSH {LR}
+    TurnOff RS
+    LDR R0, =0x0
+    BL write_4bit2
+    LDR R0, =0x1
+    BL write_4bit2
+    POP {LR}
+    BX LR
+
+
+.syntax unified
+clear_display:
+    PUSH {LR}
+    BL display_clear2
+    POP {LR}
+    BX LR
 
 @ Initialize Display
+.syntax unified
 init:
+    PUSH {LR}
     open_file devmem
     MOVS R4, R0 @ fd for memmap
     map_memory
@@ -134,8 +193,19 @@ init:
 
     write_4bit #0x0
     write_4bit #0xF
-    BX LR
+    POP {PC}
 
 .data
 timespec0: .word 0
 timespec5: .word 5000000  
+t1s: .word 1
+timespecnano0: .word 0
+ts0: .word 0
+tms10: .word 10000000
+
+devmem: .asciz "/dev/mem"
+@memOpnErr: .asciz "Failed to open /dev/mem\n"
+@memOpnsz: .word .-memOpnErr
+@memMapErr: .asciz "Failed to map memory\n"
+@memMapsz: .word .-memMapErr
+.align 4 @ realign after strings

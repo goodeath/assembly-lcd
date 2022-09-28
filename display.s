@@ -184,19 +184,11 @@ _end:
 
 
 .data
-ts0: .word 0
-tms10: .word 10000000
+
 times: .word 0
 timen: .word 500000
 timesz: .word 0
 timenz: .word 100000000
-t1s: .word 1
-timespecnano0: .word 0
+
 timespecnano00: .word 0
 
-devmem: .asciz "/dev/mem"
-@memOpnErr: .asciz "Failed to open /dev/mem\n"
-@memOpnsz: .word .-memOpnErr
-@memMapErr: .asciz "Failed to map memory\n"
-@memMapsz: .word .-memMapErr
-.align 4 @ realign after strings
