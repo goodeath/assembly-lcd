@@ -21,7 +21,7 @@ Segue abaixo a estrutura de diretórios do projeto
 
 ##### lib/ - Pasta com os módulos utilizados na solução
 
-## Biblioetcas
+## Bibliotecas
 #### lib/fileio.s
 Possui a macro open_file para abertura de arquivos. Recebe no R0, o descritor do arquivo aberto, no R1, o modo de abertura do arquivo.
 
@@ -31,36 +31,36 @@ Possui a macro nanosleep para fazer o programa parar durante o tempo específica
 Possui macros para configurar pinos como entrada e saída, alterar o nível lógico no modo de saída e ler o nível lógico em determinado pino. A sessão de pinos tem seu array configurado da seguinte maneira:
 
 
-- Endereço 0x0: GPIO Select offset. Indica em qual offset o gpio está para configurar como entrada e saída;
-- Endereço 0x4: A quantidade de shifts é necessário no GPIO Select para configurar o GPIO. Este valor é multiplicado por 3, pois cada GPIO tem 3 bits de modo;
-- Endereço 0x8: Offset a partir do enedereço base para o GPIO Output Set;
-- Endereço 0xc: Offset a partir do enedereço base para o GPIO Output Clear; 
-- Endereço 0x10:  Quantidade de shifts para set/clear do GPIO. É necessário, pois a quantidade de shifts anterior diferente entre a seleção de função e a configuração de nível lógico;
-- Endereço 0x14: Offset para o GPIO Read Level. Utilizado apenas com pinos que serão configurados como input
+- **Endereço 0x0**: GPIO Select offset. Indica em qual offset o gpio está para configurar como entrada e saída;
+- **Endereço 0x4**: A quantidade de shifts é necessário no GPIO Select para configurar o GPIO. Este valor é multiplicado por 3, pois cada GPIO tem 3 bits de modo;
+- **Endereço 0x8**: Offset a partir do enedereço base para o GPIO Output Set;
+- **Endereço 0xc**: Offset a partir do enedereço base para o GPIO Output Clear; 
+- **Endereço 0x10**:  Quantidade de shifts para set/clear do GPIO. É necessário, pois a quantidade de shifts anterior diferente entre a seleção de função e a configuração de nível lógico;
+- **Endereço 0x14**: Offset para o GPIO Read Level. Utilizado apenas com pinos que serão configurados como input
 
 #### lib/lcd.s
 Biblioteca principal para o controle do LCD
 ##### Procedimentos
-- void init(): Inicializa o display;
-- void clear_display: Limpa display;
-- void write_char(char ch): Escreve um caractere, entre [a-z] ou espaço. Utiliza aritmética para mapear sem a utilização de muitas comparações. Como é um char, é preciso passar o código ascii.;
-- void write_number (int n): Escreve um número 0-9 passado como inteiro;
-- void write_data_4bits(int mask): É um procedimento que, passado um valor, avalia cada um dos dígitos binários para configurar DB4-DB7. Se quisermos ativar DB4, DB5, basta chamarmos write_data_4bits(0x3).
+- **void init()**: Inicializa o display;
+- **void clear_display**: Limpa display;
+- **void write_char(char ch)**: Escreve um caractere, entre [a-z] ou espaço. Utiliza aritmética para mapear sem a utilização de muitas comparações. Como é um char, é preciso passar o código ascii.;
+- **void write_number (int n)**: Escreve um número 0-9 passado como inteiro;
+- **void write_data_4bits(int mask)**: É um procedimento que, passado um valor, avalia cada um dos dígitos binários para configurar DB4-DB7. Se quisermos ativar DB4, DB5, basta chamarmos write_data_4bits(0x3).
 ##### Macros
-- pulse: Gera um pulso utilizando o enable, pra concluir a transferência de dados pro LCD;
-- write_4bit: Uma macro para write_data_4bits.
+- **pulse**: Gera um pulso utilizando o enable, pra concluir a transferência de dados pro LCD;
+- **write_4bit**: Uma macro para write_data_4bits.
 
 #### display.s
 
 Programa principal para execução do contador. O valor do contador fica registrado em R1, e as flags para pausar/continuar e reiniciar contagem, estão nos registradores R6 e R5, respectivamente
 ##### Procedimentos
-- void main(): Inicializa o programa;
-- void system_init(): Faz primeiros procedimentos para iniciar a contagem;
-- void system_run(): Inicia o processo de contagem caso não esteja pausado;
-- void pause_counter(): Faz leitura dos botões para checar se é necessário pausar/iniciar o contador;
-- void reset_counter(): Faz leitura dos botões para checar se é necessário reiniciar o contador;
-- int divide(int dividend, int divisor): Algoritmo de divisão por subtrações sucessivas, retorna quociente;
-- int reminder(int dividend, int divisor): Algoritmo de divisão por subtrações sucessivas, retorna resto.
+- **void main()**: Inicializa o programa;
+- **void system_init()**: Faz primeiros procedimentos para iniciar a contagem;
+- **void system_run()**: Inicia o processo de contagem caso não esteja pausado;
+- **void pause_counter()**: Faz leitura dos botões para checar se é necessário pausar/iniciar o contador;
+- **void reset_counter()**: Faz leitura dos botões para checar se é necessário reiniciar o contador;
+- **int divide(int dividend, int divisor)**: Algoritmo de divisão por subtrações sucessivas, retorna quociente;
+- **int reminder(int dividend, int divisor)**: Algoritmo de divisão por subtrações sucessivas, retorna resto.
 
 
 # Dispositivos
