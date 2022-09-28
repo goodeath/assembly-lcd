@@ -1,6 +1,48 @@
 # Introdução
 Assembly LCD é uma biblioteca de controle de display LCDs baseados no modelo Hitachi HD44780U, possibilitando o seu uso sem a necessidade de implementar os detalhes associados a comunicação. Baseado na Raspberry Pi Zero e sua arquitetura Arm V6, é possível limpar o display, escrever um caractere e posicionar o cursor (linha e coluna). Além disso, no diretório examples/ há um programa que demonstra seu uso.
 
+
+# Estrutura do projeto
+Segue abaixo a estrutura de diretórios do projeto
+```
+├── display.s
+├── examples
+│   └── countdown.c
+├── lib
+│   ├── fileio.s
+│   ├── gpio.s
+│   ├── lcd.s
+│   └── utils.s
+├── LICENSE
+├── makefile
+└── README.md
+```
+examples/ - Possui um programa C utilizando as bibliotecas exportadas
+lib/ - Pasta com os módulos utilizados na solução
+
+## Biblioetcas
+#### lib/fileio.s
+Possui a macro open_file para abertura de arquivos. Recebe no R0, o descritor do arquivo aberto, no R1, o modo de abertura do arquivo.
+
+#### lib/utils.s
+Possui a macro nanosleep para fazer o programa parar durante o tempo específicado. R0 é um ponteiro para quantidade de segundos e R1 é um ponteiro para quantidade de nanossegundos.
+#### lib/gpio.s
+Possui macros para configurar pinos como entrada e saída, alterar o nível lógico no modo de saída e ler o nível lógico em determinado pino. A sessão de pinos tem seu array configurado da seguinte maneira:
+
+
+- Endereço 0x0: GPIO Select offset. Indica em qual offset o gpio está para configurar como entrada e saída;
+- Endereço 0x4: A quantidade de shifts é necessário no GPIO Select para configurar o GPIO. Este valor é multiplicado por 3, pois cada GPIO tem 3 bits de modo;
+- Endereço 0x8: Offset a partir do enedereço base para o GPIO Output Set;
+- Endereço 0xc: Offset a partir do enedereço base para o GPIO Output Clear; 
+- Endereço 0x10:  Quantidade de shifts para set/clear do GPIO. É necessário, pois a quantidade de shifts anterior diferente entre a seleção de função e a configuração de nível lógico;
+- Endereço 0x14: Offset para o GPIO Read Level. Utilizado apenas com pinos que serão configurados como input
+
+#### lib/lcd.s]
+Biblioteca principal para o controle do LCD
+
+#### display.s
+
+#
 # Dispositivos
 
 Abaixo está presente os dispositivos utilizados, suas características e documentação utilizada para desenvolvimento do projeto
