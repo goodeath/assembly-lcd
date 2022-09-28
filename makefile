@@ -1,4 +1,5 @@
 countdown: counter
+example: cexample
 
 counter: display.o
 	gcc -o display display.o
@@ -17,3 +18,6 @@ lib/gpio.o: lib/gpio.s
 
 lib/utils.o: lib/utils.s
 	as -o lib/utils.o lib/utils.s
+
+cexample: examples/countdown.c lib/lcd.s
+	gcc -o countdown examples/countdown.c lib/lcd.s
