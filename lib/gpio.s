@@ -4,6 +4,8 @@
 .equ sys_close, 6
 .equ FLAG, 0x7
 .equ pagelen, 4096
+.section .text
+
 @ Access 0x20200 Address
 .macro map_memory
     LDR R0, =0
@@ -139,7 +141,7 @@ TurnOffp:
  
 
 .data
-gpio_base_addr: .word 0x3F200 
+gpio_base_addr: .word 0x20200 
 @gpio_base_addr: .word 0x20200 
 
 @@@ Pin Definitions @@@

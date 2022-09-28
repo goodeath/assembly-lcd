@@ -1,3 +1,5 @@
+.section .text
+
 .equ sys_open, 5
 
 @ File IO

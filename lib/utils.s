@@ -1,3 +1,4 @@
+.section .text
 
 .macro nanosleep seconds nano
     PUSH {R0-R6}
