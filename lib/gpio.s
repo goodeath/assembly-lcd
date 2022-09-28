@@ -7,6 +7,12 @@
 .section .text
 
 @ Access 0x20200 Address
+@ Map Memory
+@ Return an user-space memory mapped to some low address
+@
+@ void *syscall(SYS_mmap2, unsigned long addr, unsigned long length, 
+@        unsigned long prot, unsigned long flags, unsigned long fd,
+@        unsigned long pgoffset);
 .macro map_memory
     LDR R0, =0
     LDR R1, =#pagelen
@@ -17,7 +23,8 @@
     LDR R7, =192
     SVC 0
 .endm
-@ SetOutputPin
+
+@ Set Output Pin
 .macro SetOutputPin pin
 
     LDR R2, =\pin

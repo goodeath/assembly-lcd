@@ -7,8 +7,8 @@ extern void clear_display();
 int main(){
     init();
     printf("Initialized\n");
-    char str[] = "iniciando";
-    for(int i=0;i<21;i++) write_char(str[i]);
+    char str[] = "ola mundo";
+    for(int i=0;i<10;i++) write_char(str[i]);
     printf("Written\n");
     return 0;
 }

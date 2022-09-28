@@ -17,8 +17,9 @@ Segue abaixo a estrutura de diretórios do projeto
 ├── makefile
 └── README.md
 ```
-examples/ - Possui um programa C utilizando as bibliotecas exportadas
-lib/ - Pasta com os módulos utilizados na solução
+##### examples/ - Possui um programa C utilizando as bibliotecas exportadas
+
+##### lib/ - Pasta com os módulos utilizados na solução
 
 ## Biblioetcas
 #### lib/fileio.s
@@ -37,12 +38,31 @@ Possui macros para configurar pinos como entrada e saída, alterar o nível lóg
 - Endereço 0x10:  Quantidade de shifts para set/clear do GPIO. É necessário, pois a quantidade de shifts anterior diferente entre a seleção de função e a configuração de nível lógico;
 - Endereço 0x14: Offset para o GPIO Read Level. Utilizado apenas com pinos que serão configurados como input
 
-#### lib/lcd.s]
+#### lib/lcd.s
 Biblioteca principal para o controle do LCD
+##### Procedimentos
+- void init(): Inicializa o display;
+- void clear_display: Limpa display;
+- void write_char(char ch): Escreve um caractere, entre [a-z] ou espaço. Utiliza aritmética para mapear sem a utilização de muitas comparações. Como é um char, é preciso passar o código ascii.;
+- void write_number (int n): Escreve um número 0-9 passado como inteiro;
+- void write_data_4bits(int mask): É um procedimento que, passado um valor, avalia cada um dos dígitos binários para configurar DB4-DB7. Se quisermos ativar DB4, DB5, basta chamarmos write_data_4bits(0x3).
+##### Macros
+- pulse: Gera um pulso utilizando o enable, pra concluir a transferência de dados pro LCD;
+- write_4bit: Uma macro para write_data_4bits.
 
 #### display.s
 
-#
+Programa principal para execução do contador. O valor do contador fica registrado em R1, e as flags para pausar/continuar e reiniciar contagem, estão nos registradores R6 e R5, respectivamente
+##### Procedimentos
+- void main(): Inicializa o programa;
+- void system_init(): Faz primeiros procedimentos para iniciar a contagem;
+- void system_run(): Inicia o processo de contagem caso não esteja pausado;
+- void pause_counter(): Faz leitura dos botões para checar se é necessário pausar/iniciar o contador;
+- void reset_counter(): Faz leitura dos botões para checar se é necessário reiniciar o contador;
+- int divide(int dividend, int divisor): Algoritmo de divisão por subtrações sucessivas, retorna quociente;
+- int reminder(int dividend, int divisor): Algoritmo de divisão por subtrações sucessivas, retorna resto.
+
+
 # Dispositivos
 
 Abaixo está presente os dispositivos utilizados, suas características e documentação utilizada para desenvolvimento do projeto
