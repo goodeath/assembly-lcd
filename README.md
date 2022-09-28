@@ -244,6 +244,8 @@ Escreve caracteres alfa numéricos (0-9a-zA-Z)
 Posiciona o cursor na linha x (0-1) e na coluna y (0-15)
 
 # Como executar
+
+### Contador
 1. Na pasta execute:
 
 `$ make countdown`
@@ -251,6 +253,15 @@ Posiciona o cursor na linha x (0-1) e na coluna y (0-15)
 2. Em seguida execute o programa
 
 `$ sudo ./display`
+
+### Exemplo
+1. Na pasta execute:
+
+`$ make example`
+
+2. Em seguida execute o programa
+
+`$ sudo ./countdown`
 
 # Resultados
 
