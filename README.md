@@ -66,7 +66,7 @@ Programa principal para execução do contador. O valor do contador fica registr
 
 Para organizar as diretivas do projeto, foi utilizado um arquivo makefile contendo um conjunto de diretivas usadas pela ferramenta de automação make para gerar um alvo/meta, e simplificar e agilizar a montagem do programa.
 
-No nosso Makefile, temos comandos como "fileio" que gerencia as entradas e saídas e comandos do display lcd como descritos abaixo:
+No nosso Makefile, temos comandos desde "fileio" que gerencia as entradas e saídas até comandos do display lcd como descritos abaixo:
 ```
 counter: display.o
 	gcc -o display display.o
