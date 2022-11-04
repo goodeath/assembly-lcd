@@ -89,7 +89,7 @@ write_number:
 
 
 
-.syntax unified
+@.syntax unified
 write_char:
     PUSH {R0-R2, LR}
     TurnOn RS
@@ -113,7 +113,7 @@ write_char:
 1:
     write_4bit 0x8
     write_4bit 0x0
-    POP {R0-R2, PC}
+    POP {R0, R1, R2, PC}
  
 .macro display_clear
     TurnOff RS
@@ -132,7 +132,7 @@ display_clear2:
     BX LR
 
 
-.syntax unified
+@.syntax unified
 clear_display:
     PUSH {LR}
     BL display_clear2
@@ -140,7 +140,7 @@ clear_display:
     BX LR
 
 @ Initialize Display
-.syntax unified
+@.syntax unified
 init:
     PUSH {LR}
     open_file devmem
@@ -163,7 +163,12 @@ init:
 
     TurnOff RS
     TurnOff E
-    
+    TurnOff DB4
+    TurnOff DB5
+    TurnOff DB6
+    TurnOff DB7
+    TurnOn pin6
+
     @ Start   
     // Step 1
     @nanosleep timesz timenz
