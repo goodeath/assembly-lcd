@@ -11,6 +11,10 @@
 #include <wiringPi.h>
 #include <wiringSerial.h>
 
+extern void init();
+extern void write_char(char ch);
+extern void clear_display();
+
 #define BAUD_RATE 9600
 
 // Read message after secret code.
@@ -34,6 +38,8 @@ int init_uart(){
 
 int main()
 {
+    printf("Initializing Display...\n");
+    init();
     printf("Initializing Uart...\n");
     int serial_port = init_uart();
     if(!serial_port) return 1;
@@ -57,6 +63,7 @@ int main()
         printf("Digite um comando: ");
         int cmd;
         scanf("%d", &cmd);
+        clear_display();
         char byte = cmd;
         wait = 1;
         serialPutchar(serial_port, byte);
@@ -67,8 +74,12 @@ int main()
                 wait = 0;
             }
             if(!serialDataAvail(serial_port)) continue;
-            char byte = serialGetchar(serial_port);
-            printf("Response: %d\n", byte);
+            while(serialDataAvail(serial_port)){
+                char byte = serialGetchar(serial_port);
+                if(byte >= '0' && byte <= '9')
+                    write_char(byte);
+                printf("Response: %d\n", byte);
+            }
             wait = 0;
         }
         t = 0;
